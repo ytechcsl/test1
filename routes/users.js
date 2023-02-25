@@ -1,5 +1,7 @@
 var express = require('express');
 var requestIP = require('request-ip')
+var sharp = require('sharp')
+var { v4: uuidv4 } = require('uuid');
 var router = express.Router();
 
 const Ajv = require("ajv")
@@ -12,12 +14,16 @@ router.post('/ajv', ajvValidateReq, function (req, res, next) {
 	res.status(200).json({ success: true, code: 200, validate: req.validate, data: [{ name: 'Hellow', age: 20 }] });
 });
 
-router.post('/upload', function (req, res, next) {
+router.post('/upload', async function (req, res, next) {
 	var clientIp = requestIP.getClientIp(req)
 	console.log(clientIp)
 	console.log(req.headers)
-	console.log('Files: ', req.files)
+	console.log('Files: ', req.files[''])
 	console.log('Body: ', req.body)
+	const result = await sharp(req.files.image.data)
+		.webp()
+		.toFile(uuidv4() + ".webp");
+	console.log(result)
 	res.status(200).json({ success: true, code: 200, data: [{ name: 'Hellow', age: 20 }] });
 });
 
