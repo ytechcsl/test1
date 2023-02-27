@@ -18,7 +18,7 @@ router.post('/upload', async function (req, res, next) {
 	var clientIp = requestIP.getClientIp(req)
 	console.log(clientIp)
 	console.log(req.headers)
-	console.log('Files: ', req.files[''])
+	console.log('Files: ', req.files)
 	console.log('Body: ', req.body)
 	const result = await sharp(req.files.image.data)
 		.webp()
