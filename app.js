@@ -4,6 +4,51 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var fileUpload = require('express-fileupload')
+const rateLimit = require('express-rate-limit')
+
+/* //Redis store setup
+const RedisStore = require("rate-limit-redis");
+const { createClient } = require("redis");
+const redisClient = createClient({
+	socket: {
+		host: '127.0.0.1',
+		port: '6379'
+	},
+	password: ''
+})
+redisClient.connect().then(() => {
+	console.log('Connect redis successfully')
+}).catch(() => {
+	console.log('Connect redis error')
+}); */
+
+var MongoStore = require('rate-limit-mongo');
+const limiter = rateLimit({
+	//MongoDB store configuration
+	store: new MongoStore({
+		uri: 'mongodb://127.0.0.1:27017/limiter_db',
+		user: 'admin',
+		password: '',
+		// should match windowMs
+		expireTimeMs: 1 * 60 * 1000,
+		errorHandler: console.error.bind(null, 'rate-limit-mongo')
+		// see Configuration section for more options and details
+	}),
+	/* // Redis store configuration
+	store: new RedisStore({
+		sendCommand: (...args) => redisClient.sendCommand(args),
+	}), */
+	windowMs: 1 * 60 * 1000, // 1 minutes
+	max: 15, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+	message: 'No permission'
+})
+
+// const si = require('systeminformation');
+// si.uuid().then(data => console.log(data))
+// 	.catch(error => console.error(error));
+
 // const axios = require('axios')
 // axios.get('http://192.168.1.35:3000/api/user', {
 // 	headers: {
@@ -75,9 +120,10 @@ async function ipRedis() {
 	console.log(ip)
 } */
 
-// console.log(new Date('Wed Feb 01 2023 15:32:01 GMT+0700 (Indochina Time)'))
+// console.log(new Date(1677658018681), new Date(1677658011731), 1677658018681 - 1677658011731)
 
 var usersRouter = require('./routes/users');
+var postgresRouter = require('./routes/postgresql');
 
 var app = express();
 app.use(fileUpload());
@@ -88,8 +134,20 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/image', express.static(path.join(__dirname, 'public/images')));
 
+app.use('/user', limiter, usersRouter);
+app.use('/postgres', limiter, postgresRouter);
 
-app.use('/user', usersRouter);
+app.get('/stream', (req, res) => {
+	res.writeHead(200, {
+		'Content-Type': 'text/event-stream',
+		'Cache-Control': 'no-cache',
+		'Connection': 'keep-alive'
+	});
+	setInterval(() => {
+		console.log('Evnet source working')
+		res.write('data: ' + new Date() + '\n\n');
+	}, 1000);
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

@@ -27,6 +27,14 @@ router.post('/upload', async function (req, res, next) {
 	res.status(200).json({ success: true, code: 200, data: [{ name: 'Hellow', age: 20 }] });
 });
 
+router.get('/testing', async function (req, res, next) {
+	var clientIp = requestIP.getClientIp(req)
+	console.log(clientIp)
+	const header = req.headers
+
+	res.status(200).json(header);
+});
+
 module.exports = router;
 
 function ajvValidateReq(req, res, next) {
