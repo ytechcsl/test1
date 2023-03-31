@@ -6,7 +6,7 @@ var logger = require('morgan');
 var fileUpload = require('express-fileupload')
 const rateLimit = require('express-rate-limit')
 
-/* //Redis store setup
+/* //Redis store setup to limiter
 const RedisStore = require("rate-limit-redis");
 const { createClient } = require("redis");
 const redisClient = createClient({
@@ -22,7 +22,7 @@ redisClient.connect().then(() => {
 	console.log('Connect redis error')
 }); */
 
-var MongoStore = require('rate-limit-mongo');
+var MongoStore = require('rate-limit-mongo'); //Mongo store import to limiter
 const limiter = rateLimit({
 	//MongoDB store configuration
 	store: new MongoStore({
